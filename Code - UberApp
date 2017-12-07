@@ -1,0 +1,52 @@
+var https = require('https');
+
+var CONFIG = {
+  uber_token:      "KA.eyJ2ZXJzaW9uIjoyLCJpZCI6IjI1VDJJL1VDUWVxdnlmTkZwajNPYlE9PSIsImV4cGlyZXNfYXQiOjE1MTE0ODU4NzQsInBpcGVsaW5lX2tleV9pZCI6Ik1RPT0iLCJwaXBlbGluZV9pZCI6MX0.TlKIRp_p0Le4ZWNN2wF4HwYIs8wL29VUMU0qUvOu5qM",
+  product_id:      "1a150e95-d687-454b-9878-2942a9448693",
+  start_latitude:  40.0376036816182,
+  start_longitude: -75.34149169921875,
+  end_latitude:    40.05005532835949,
+  end_longitude:   -75.41393280029297,
+};
+
+function callUber(event, context) {
+  var data =  {
+    product_id:      CONFIG.product_id,
+    start_latitude:  CONFIG.start_latitude,
+    start_longitude: CONFIG.start_longitude,
+    end_latitude:    CONFIG.end_latitude,
+    end_longitude:   CONFIG.end_longitude
+  };
+
+  data = JSON.stringify(data);
+
+  var headers = {
+    'Authorization':  'Bearer ' + CONFIG.uber_token,
+    'Content-Type':   'application/json',
+    'Content-Length': Buffer.byteLength(data)
+  };
+
+  var options = {
+    host:    'api.uber.com',
+    path:    '/v1/requests',
+    method:  'POST',
+    headers: headers
+  };
+
+  var req = https.request(options, function(res) {
+    if (res.statusCode == 200) {
+      context.succeed(event);
+    } else if (context) {
+      context.fail(event);
+    }
+
+    res.on('data', function (chunk) {
+      console.log("" + chunk);
+    });
+  });
+
+  req.write(data);
+  req.end();
+}
+
+exports.handler = callUber;
